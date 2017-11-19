@@ -19,7 +19,6 @@ def toZmqCurvePath(path, key, basePath='certificates'):
     pass
 
 
-# TODO externalize format into property file
 def check_content_format(format):
     if format in format_map.keys():
         return True

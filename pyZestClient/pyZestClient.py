@@ -1,3 +1,5 @@
+__author__ = 'pooyadav'
+
 import logging
 import struct
 import os
@@ -86,7 +88,18 @@ class PyZestClient:
         pass
 
     def send_request_and_await_response(self, request):
-        pass
+        self.logger.info(" Sending request ...")
+        try:
+            if self.socket.closed:
+                self.logger.error("No active connection")
+            else:
+                self.socket.send(request)
+                response = self.sock.recv(flags=0)
+                parsed_response = self.handle_response(response)
+                return parsed_response
+
+        except Exception as e:
+            self.logger.error("Cannot send request "+ e.message)
 
     def handle_response(self, msg):
         """
@@ -98,6 +111,7 @@ class PyZestClient:
         zr = ZestHeader()
         try:
             zr.parse(msg)
+
         except PyZestException as e:
             self.logger.error("Cannot parse the message "+e.message)
 
