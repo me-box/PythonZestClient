@@ -1,6 +1,9 @@
 __author__ = 'pooyadav'
 
 import struct
+from zestOptions import ZestOptions
+
+
 
 
 class ZestHeader:
@@ -53,13 +56,14 @@ class ZestHeader:
         # append the options
         for opt in self.options:
             try:
-                opt_bytes = opt.marshall()
+                assert isinstance(opt, ZestOptions)
+                opt_bytes = opt.marshal()
                 marshaled_header.append(opt_bytes)
-            except:
-                raise TypeError("Cannot parse options")
+            except Exception as e:
+                raise TypeError("Cannot parse options "+e.message)
 
         # append payload
-        marshaled_header.append(self.payload)
+        #marshaled_header.append(self.payload)
         return marshaled_header
 
 
