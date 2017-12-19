@@ -55,4 +55,15 @@ def parse(msg):
             pass
 
 
+def zestHeader():
+    return { "oc":0,
+        "code": 0,
+        "tkl": 0,
+        "token": "",
+        "options": [],
+        "payload": "",}
 
+
+
+def marshalZestHeader(header):
+    return

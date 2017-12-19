@@ -40,9 +40,9 @@ class ZestHeader:
 
         # header attributes marshaled into marshaled_header
         marshaled_header = []
-        marshaled_header.append(bytes([self.code]))
-        marshaled_header.append(bytes([self.oc]))
-        marshaled_header.append(bytes([self.tkl]))
+        marshaled_header.append(bytes(self.code))
+        marshaled_header.append(bytes(self.oc))
+        marshaled_header.append(bytes(self.tkl))
         # marshaled_header = bytearray()
         # marshaled_header.append(struct.pack('B', self.code))
         # marshaled_header.append(struct.pack('B', self.oc))
@@ -50,7 +50,7 @@ class ZestHeader:
 
         if self.tkl > 0:
             #marshaled_header.append(bytearray(self.Token))
-            marshaled_header.append(bytes([self.Token]))
+            marshaled_header.append(bytes(self.Token))
 
 
         # append the options

@@ -13,6 +13,7 @@ import zestOptions
 import zestHeader
 import pyZestUtil
 import socket as sc
+import json
 
 import pickle as p
 
@@ -30,6 +31,7 @@ class PyZestClient:
         """
 
         self.logger = logger or logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
         self.serverKey = server_key
         self.endpoint = end_point
         self.logger.debug("Connecting to the server")
@@ -44,7 +46,7 @@ class PyZestClient:
             self.socket.curve_secretkey = client_secret
             self.socket.curve_publicKey = client_public
 
-            self.socket.curve_serverKey = server_key
+            self.socket.curve_serverKey = bytes(server_key)
            # self.socket.setsockopt_string("curve_serverKey", server_key)
             self.socket.connect(end_point)
             self.logger.info('Connection established with ' + end_point)
@@ -61,7 +63,7 @@ class PyZestClient:
         self.logger.debug("Posting data to the .. ")
         pass
 
-    def get(self,  path, contentFormat,tokenString =None):
+    def get(self,  path, contentFormat,tokenString=None):
         """
 
         :param tokenString:
@@ -69,7 +71,12 @@ class PyZestClient:
         :param contentFormat:
         """
         self.logger.debug("Getting data from the endpoint")
-        header = zestHeader.ZestHeader(code=1, token=tokenString)
+        header = pyZestUtil.zestHeader()
+        header["code"]= 1
+        header["token"] = tokenString
+
+        print("header" + str(header))
+
 
         # set header options
         options = []
@@ -78,15 +85,15 @@ class PyZestClient:
         # options.append(zestOptions.ZestOptions(number=12, value=bytearray(
         #     struct.pack('B', pyZestUtil.content_format_to_int(contentFormat)))))
         options.append(zestOptions.ZestOptions(number=12, value= str(pyZestUtil.content_format_to_int(contentFormat))))
-        header.options = options
+        header["options"] = options
 
         # header marshal into bytes
-        header_into_bytes = header.marshall()
+        header_into_bytes = pyZestUtil.marshalZestHeader(header)
         try:
             x=p.dumps(header_into_bytes)
             print(x)
             response = self.send_request_and_await_response(x)
-            print("Kuch aaya"+response)
+            print("Some response received"+response)
             return response.payload
         except Exception as e:
             self.logger.error("Error in sending request "+ e.message)
@@ -105,10 +112,11 @@ class PyZestClient:
                 try:
                     self.socket.send(request)
                 except Exception as e:
-                    self.logger.error("Error aa gyi" + e.message)
+                    self.logger.error("Error appeared" + e.message)
                 try:
-                    #response = self.socket.recv(flags=0)
-                    response = self.socket.recv_pyobj(flags=0)
+                    response = self.socket.recv(flags=0)
+                    #response = self.socket.recv_pyobj(flags=0)
+                    print("Response received "+ str(response))
                 except Exception as e:
                     self.logger.error("Didn't get reponse " + e.message)
                 parsed_response = self.handle_response(response)
@@ -146,7 +154,7 @@ class PyZestClient:
 
 
 def main():
-    p= PyZestClient('vl6wu0A@XP?}Or/&BR#LSxn>A+}L)p44/W[wXL3<',"tcp://127.0.0.1:5555")
+    p=PyZestClient('vl6wu0A@XP?}Or/&BR#LSxn>A+}L)p44/W[wXL3<',"tcp://127.0.0.1:5555")
     p.get(tokenString="",path='/kv/foo',contentFormat="JSON")
 
 if __name__=="__main__":
