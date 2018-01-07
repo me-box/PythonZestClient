@@ -1,7 +1,7 @@
 __author__ = 'pooyadav'
 
 import os
-from zestHeader import ZestHeader
+
 
 format_map = {'TEXT': 0, 'BINARY': 42, 'JSON': 50}  # generate path to CURVE key
 

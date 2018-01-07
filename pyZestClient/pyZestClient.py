@@ -9,16 +9,12 @@ import zmq
 import zmq.auth
 from zmq.auth.thread import ThreadAuthenticator
 
-import zestOptions
-import zestHeader
 import pyZestUtil
 import socket as sc
-import json
 
-import pickle as p
 
 from Exception.PyZestException import PyZestException
-from Exception.PyZestException import IllegalFormatException
+
 
 
 class PyZestClient:
@@ -105,10 +101,10 @@ class PyZestClient:
         try:
             print("data "+ str(header_into_bytes))
             response = self.send_request_and_await_response(header_into_bytes)
-            print("Some response received "+response)
-            return response.payload
+            #print("Some response received "+response)
+            return response["payload"]
         except Exception as e:
-            self.logger.error("Error in sending request ")
+            self.logger.error( "Message sending error  " + str(e.args))
         pass
 
     def observe(self):
@@ -123,17 +119,20 @@ class PyZestClient:
                 try:
                     self.socket.send(request)
                 except Exception as e:
-                    self.logger.error("Error appeared " + e.message)
+                    self.logger.error("Error appeared " + str(e.args))
                 try:
                     response = self.socket.recv(flags=0)
                     print("Response received "+ str(response))
                 except Exception as e:
-                    self.logger.error("Didn't get reponse " + e.message)
-                parsed_response = self.handle_response(response)
+                    self.logger.error("Didn't get reponse " + str(e.args))
+                try:
+                    parsed_response = self.handle_response(response)
+                except Exception as e:
+                    self.logger.error("Error in handling response " + str(e.args))
                 return parsed_response
 
         except Exception as e:
-            self.logger.error("Cannot send request " + e.message)
+            self.logger.error("Cannot send request " + str(e.args))
 
     def handle_response(self, msg):
         """
@@ -146,22 +145,24 @@ class PyZestClient:
         #zr = zestHeader.ZestHeader()
         try:
             #zr.parse(msg)
-            if zr.code == 65:
+            if zr["code"] == 65:
+                print("Code 65 received")
                 return zr
-            elif zr.code == 69:
+            elif zr["code"] == 69:
+                print("Code 69 received")
                 return zr
-            elif zr.code == 128:
+            elif zr["code"]== 128:
                 # Code 128 corresponds to bad request
                 raise PyZestException(zr, "Bad Request")
-            elif zr.code == 129:
+            elif zr["code"] == 129:
                 raise PyZestException(zr, "Unauthorized request")
-            elif zr.code == 143:
+            elif zr["code"] == 143:
                 raise PyZestException(zr, "UnSupported content format")
             else:
                 raise PyZestException(zr, "Invalid code" + str(zr.code))
 
         except PyZestException as e:
-            self.logger.error("Cannot parse the message " + e.message)
+            self.logger.error("Cannot parse the message " + str(e.args))
 
 
 def main():
