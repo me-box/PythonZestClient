@@ -41,8 +41,7 @@ def parse(msg):
     #assert type(msg) is bytearray, "Cannot parse header- invalid format, should be byte array"
     #assert len(msg) < 4, "Cannot parse header - not enough bytes"
     zr = zestHeader()
-    print(zr["code"])
-    print("received code")
+    print("Inside Response Parsing - received code: ")
     zr["code"] = msg[0]
     zr["oc"] = msg[1]
     zr["tkl"] = int.from_bytes(bytes(msg[2:4]),byteorder='big')
@@ -56,19 +55,20 @@ def parse(msg):
         zr["token"] = str(bytes(msg[4:4+zr["tkl"]],byteorder='big'), encoding="utf-8")
 
     offset = 4 + zr["tkl"]
+    print(offset)
 
     for i in range(0, zr["oc"]):
-        zoh = parseZestOptionsHeader(msg, offset)
-        print("zoh returned")
-        zr["options"].append(zoh)
-        offset = offset + 4 + len(zoh)
+        print("offset")
         print(offset)
+        zoh = parseZestOptionsHeader(msg, offset)
+        print(zoh)
+        print(len(zoh))
+        zr["options"].append(zoh)
+        offset = offset + 4 + zoh["len"]
 
-    print(len(msg))
-    print(offset)
     if(len(msg) > offset):
-        print("msg has a payload")
-        zr["payload"] = str(msg[offset-1:], 'utf-8')
+        print("Inside Response Parsing - msg has a payload")
+        zr["payload"] = str(msg[offset:], 'utf-8')
         print("  ", zr["payload"])
     return zr
 
@@ -87,9 +87,11 @@ def marshalZestHeader(header):
     print(header)
     optionsLen = [li['len']+4 for li in header["options"]]
     optionsLen = sum(optionsLen)-4
+    print("Inside Marshalheader - Options Length: ")
     print(optionsLen)
     payloadLen = len(bytearray(header["payload"], "utf8"))
     bufferSize = 8+header["tkl"]+ optionsLen + payloadLen
+    print("Inside Marshalheader - BufferSize : ")
     print(bufferSize)
     buff = bytearray(bufferSize)
     x = memoryview(buff)
@@ -100,7 +102,6 @@ def marshalZestHeader(header):
     offset = 4 + header["tkl"]
     for i in range(0, header["oc"]):
         zoh = MarshalZestOptionsHeader(header["options"][i])
-        print("received data from option bytes")
         buff[offset:offset+len(zoh)]= zoh
         offset = offset+len(zoh)
     buff[offset:offset+payloadLen] = bytearray(header["payload"], "utf8")
@@ -108,7 +109,6 @@ def marshalZestHeader(header):
 
 
 def MarshalZestOptionsHeader(zoh):
-    print("inside Zest Options")
     buff1 = bytearray(4+ int(zoh["len"]))
     x = int(zoh["number"])
     buff1[0:2] = x.to_bytes(2, byteorder='big', signed=False)
@@ -123,17 +123,15 @@ def MarshalZestOptionsHeader(zoh):
     return buff1
 
 def parseZestOptionsHeader(msg, offset):
-    print("parse called")
+    print("Inside Parse Option Header")
     zoh = newZestOptionHeader(0,0,0)
-    zoh["number"] = int.from_bytes(bytes(msg[offset:offset+2]),byteorder='big',signed=False)
-    zoh["len"] = int.from_bytes(bytes(msg[offset+2:offset+4]),byteorder='big',signed=False)
+    zoh["number"] = int.from_bytes(bytes(msg[offset:offset+2]),byteorder='big',signed=True)
+    zoh["len"] = int.from_bytes(bytes(msg[offset+2:offset+4]),byteorder='big',signed=True)
     zoh["value"] = str(msg[offset+4:offset+4+zoh["len"]], 'utf-8')
-    print(zoh["value"])
     return zoh
 
 
 def newZestOptionHeader(num,len1,val):
-    print("newzest called")
-    return {"number":num,
+        return {"number":num,
         "len": len1,
         "value": val,}

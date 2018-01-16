@@ -10,13 +10,13 @@ import zmq
 import zmq.auth
 from zmq.auth.thread import ThreadAuthenticator
 
-import pyZestUtil
+import  pyZestUtil
 import socket as sc
 
 
 from Exception.PyZestException import PyZestException
 
-dealer_endpoint = ""
+dealer_endpoint = "tcp://127.0.0.1:5556"
 
 class PyZestClient:
     def __init__(self, server_key, end_point, logger=None):
@@ -32,6 +32,7 @@ class PyZestClient:
         self.serverKey = server_key
         self.endpoint = end_point
         self.logger.debug("Connecting to the server")
+        self.observers = {}
         try:
             ctx = zmq.Context()
             auth = ThreadAuthenticator(ctx)
@@ -83,27 +84,27 @@ class PyZestClient:
         header_into_bytes = pyZestUtil.marshalZestHeader(header)
 
         try:
-            print("data "+ str(header_into_bytes))
+            print("Inside Post: Header data in bytes - "+ str(header_into_bytes))
             response = self.send_request_and_await_response(header_into_bytes)
             try:
-                parsed_response = self.handle_response(response)
+                parsed_response = self.handle_response(response, self.returnInput)
             except Exception as e:
-                self.logger.error("Error in handling response " + str(e.args))
+                self.logger.error("Inside Post: Error in handling response - " + str(e.args))
 
                 return parsed_response["payload"]
         except Exception as e:
-            self.logger.error( "Message sending error  " + str(e.args))
+            self.logger.error( "Inside Post: Message sending error - " + str(e.args))
 
 
 
     def get(self, path, contentFormat, tokenString=None):
-        self.logger.debug("Getting data from the endpoint")
+        self.logger.debug("Inside GET: Getting data from the endpoint")
         header = pyZestUtil.zestHeader()
         header["code"] = 1
         header["token"] = tokenString
         header["tkl"] = len(tokenString)
         header["oc"] = 3
-        print("header " + str(header))
+        print("Inside GET: header " + str(header))
 
 
         # set header options
@@ -119,7 +120,7 @@ class PyZestClient:
         options.append({"number": 12,
                         "len": 2,
                         "value": pyZestUtil.content_format_to_int(contentFormat),})
-
+        print("Inside GET: option ")
         print(options)
         header["options"] = options
 
@@ -127,15 +128,15 @@ class PyZestClient:
         header_into_bytes = pyZestUtil.marshalZestHeader(header)
 
         try:
-            print("data "+ str(header_into_bytes))
+            print("Inside GET: Header into bytes - "+ str(header_into_bytes))
             response = self.send_request_and_await_response(header_into_bytes)
             try:
-                parsed_response = self.handle_response(response)
+                parsed_response = self.handle_response(response,self.returnPayload)
             except Exception as e:
-                self.logger.error("Error in handling response " + str(e.args))
-            return parsed_response["payload"]
+                self.logger.error("Inside GET: Error in handling response -" + str(e.args))
+            return parsed_response
         except Exception as e:
-            self.logger.error( "Message sending error  " + str(e.args))
+            self.logger.error( "Inside GET: Message sending error  " + str(e.args))
 
 
     def observe(self, path, contentFormat, tokenString=None, timeOut = 0):
@@ -167,40 +168,64 @@ class PyZestClient:
 
         header_into_bytes = pyZestUtil.marshalZestHeader(header)
         try:
-            print("data: "+ str(header_into_bytes))
+            print("Inside Observe: header data into bytes: "+ str(header_into_bytes))
             response = self.send_request_and_await_response(header_into_bytes)
-            try:
-                parsed_response = self.handle_response(response)
-            except Exception as e:
-                self.logger.error("Error in handling response " + str(e.args))
-                print(parsed_response)
-                return parsed_response["payload"]
         except Exception as e:
-            self.logger.error( "Message sending error  " + str(e.args))
+            self.logger.error("Inside Observe: Message sending error - " + str(e.args))
+        try:
+            parsed_response = self.handle_response(response, self.resolve)
+        except Exception as e:
+            self.logger.error("Inside Observe: Error in handling response: " + str(e.args[0]))
+        print("Inside Observe: Response after parsing - ")
+        #print(parsed_response)
+            #return parsed_response["payload"]
+        return 1
+
 
     def resolve(self, header):
         print("Inside resolve")
         newCtx = zmq.Context()
         dealer = newCtx.socket(zmq.DEALER)
+        if(dealer.closed):
+            print("Dealer Closed")
+        else:
+            print("Dealer is Open")
         try:
             print(header["options"])
-            #dealer.identity = header["payload"]
+            print(header["payload"])
+            dealer.setsockopt_string(zmq.IDENTITY, header["payload"])
+            #dealer.identity = str(header["payload"])
         except Exception as e:
-            self.logger.error("Error setting identity" + str(e.args))
+            self.logger.error("Inside Resolve: Error setting identity - " + str(e.args))
 
+        serverKey = ""
         for i in range(len(header["options"])):
-            if(header["options"][i]["number"] == 0):
+            if(header["options"][i]["number"] == 2048):
                 serverKeyOption = header["options"][i]
                 print(serverKeyOption)
                 serverKey = serverKeyOption["value"]
-                print("Identity" + str(header["payload"]))
-                print(type(serverKey))
+                print("Identity " + str(header["payload"]))
+                print(serverKey)
+                print(bytes(binascii.hexlify(serverKey.encode('utf-8'))))
+
+
 
         client_public, client_secret = zmq.curve_keypair()
+
+
         dealer.curve_secretkey = client_secret
         dealer.curve_publicKey = client_public
         dealer.curve_serverKey = bytes(binascii.hexlify(serverKey.encode('utf-8')))
-        dealer.connect(dealer_endpoint)
+
+        print("test")
+        try:
+
+            dealer.connect(dealer_endpoint)
+            print("Dealer connected")
+        except Exception as e:
+            self.logger.error("Inside Resolve: Error connecting dealer - " + str(e.args))
+            print("XXXX")
+        return 5
 
     def send_request_and_await_response(self, request):
         self.logger.info(" Sending request ...")
@@ -214,20 +239,21 @@ class PyZestClient:
                     self.logger.error("Error appeared " + str(e.args))
                 try:
                     response = self.socket.recv(flags=0)
-                    print("Response received "+ str(response))
+                    print("Response received " + str(response))
                     return response
                 except Exception as e:
                     self.logger.error("Didn't get reponse " + str(e.args))
         except Exception as e:
             self.logger.error("Cannot send request " + str(e.args))
 
-    def handle_response(self, msg):
+    def handle_response(self, msg, fun):
         """
 
         :param msg: Response from the server
 
         """
-        self.logger.info(" Received response ...")
+        self.logger.info(" Inside Handle Response...")
+        print(str(msg))
         zr = pyZestUtil.parse(msg)
         #zr = zestHeader.ZestHeader()
         try:
@@ -237,8 +263,10 @@ class PyZestClient:
                 return zr
             elif zr["code"] == 69:
                 print("Code 69 received")
-                self.resolve(zr)
-                return;
+                x = fun(zr)
+                print(x)
+                print("back from resolve")
+                return 0
             elif zr["code"]== 128:
                 # Code 128 corresponds to bad request
                 raise PyZestException(zr, "Bad Request")
@@ -252,12 +280,16 @@ class PyZestClient:
         except PyZestException as e:
             self.logger.error("Cannot parse the message " + str(e.args))
 
+    def returnPayload(self, x):
+        return x["payload"]
+    def returnInput(selfself, x):
+        return x
 
 def main():
     p=PyZestClient('vl6wu0A@XP?}Or/&BR#LSxn>A+}L)p44/W[wXL3<',"tcp://127.0.0.1:5555")
-    p.get(tokenString="",path='/kv/foo',contentFormat="JSON")
-    p.post(tokenString="",path='/kv/test',payLoad='{"name":"testuser", "age":35}', contentFormat="JSON")
-    p.get(tokenString="",path='/kv/test',contentFormat="JSON")
+    #p.get(tokenString="",path='/kv/foo',contentFormat="JSON")
+    #p.post(tokenString="",path='/kv/test',payLoad='{"name":"testuser", "age":35}', contentFormat="JSON")
+    #p.get(tokenString="",path='/kv/test',contentFormat="JSON")
     p.observe(tokenString="",path='/kv/test',contentFormat="JSON", timeOut=30)
 if __name__=="__main__":
     logging.info("Begin")
