@@ -16,7 +16,7 @@ import socket as sc
 
 from Exception.PyZestException import PyZestException
 
-dealer_endpoint = "tcp://127.0.0.1:5556"
+dealer_endpoint = 'tcp://127.0.0.1:5556'
 
 class PyZestClient:
     def __init__(self, server_key, end_point, logger=None):
@@ -39,17 +39,20 @@ class PyZestClient:
             auth.start()
             auth.configure_curve(domain='*', location=zmq.auth.CURVE_ALLOW_ANY)
             self.socket = ctx.socket(zmq.REQ)
+            #self.socket.setsockopt(zmq.SNDTIMEO, 5000)
             client_public, client_secret = zmq.curve_keypair()
             self.socket.curve_secretkey = client_secret
-            self.socket.curve_publicKey = client_public
+            self.socket.curve_publickey = client_public
 
-            self.socket.curve_serverKey = bytes(server_key, 'utf8')
+            self.socket.curve_serverkey = bytes(server_key, 'utf8')
            # self.socket.setsockopt_string("curve_serverKey", server_key)
             self.socket.connect(end_point)
             self.logger.info('Connection established with ' + end_point)
+            #self.socket.disconnect(end_point)
+            #self.logger.info('Connection disconnected with ' + end_point)
 
         except zmq.ZMQError as e:
-            self.logger.error("Cannot establish connection" + e.message)
+            self.logger.error("Cannot establish connection" + str(e.args))
 
 
     def post(self,path, payLoad, contentFormat,tokenString=None):
@@ -208,24 +211,35 @@ class PyZestClient:
                 print(serverKey)
                 print(bytes(binascii.hexlify(serverKey.encode('utf-8'))))
 
-
-
-        client_public, client_secret = zmq.curve_keypair()
-
-
-        dealer.curve_secretkey = client_secret
-        dealer.curve_publicKey = client_public
-        dealer.curve_serverKey = bytes(binascii.hexlify(serverKey.encode('utf-8')))
-
-        print("test")
         try:
+            client_public, client_secret = zmq.curve_keypair()
+        except Exception as e:
+            self.logger.error("Inside Resolve: Error getting keypair - " + str(e.args))
 
+        try:
+            dealer.curve_secretkey = client_secret
+            dealer.curve_publickey = client_public
+            print("Client Key: " + str(client_public))
+        except Exception as e:
+            self.logger.error("Inside Resolve: Error setting dealer Public/Private keys - " + str(e.args))
+        try:
+            dealer.curve_serverkey = bytes(serverKey.encode('ascii'))
+
+        except Exception as e:
+            self.logger.error("Inside Resolve: Error setting dealer Server key - " + str(e.args))
+        try:
             dealer.connect(dealer_endpoint)
             print("Dealer connected")
         except Exception as e:
             self.logger.error("Inside Resolve: Error connecting dealer - " + str(e.args))
-            print("XXXX")
-        return 5
+
+        try:
+            message = dealer.recv(0)
+        except Exception as e:
+            self.logger.error("Inside resolve: Didn't get reponse " + str(e.args))
+        print("Message received " + str(message))
+        parsed_response  = self.handle_response(message,self.returnPayload)
+        return parsed_response
 
     def send_request_and_await_response(self, request):
         self.logger.info(" Sending request ...")
@@ -234,7 +248,7 @@ class PyZestClient:
                 self.logger.error("No active connection")
             else:
                 try:
-                    self.socket.send(request)
+                    self.socket.send(request,flags=0)
                 except Exception as e:
                     self.logger.error("Error appeared " + str(e.args))
                 try:
@@ -245,6 +259,7 @@ class PyZestClient:
                     self.logger.error("Didn't get reponse " + str(e.args))
         except Exception as e:
             self.logger.error("Cannot send request " + str(e.args))
+
 
     def handle_response(self, msg, fun):
         """
@@ -282,15 +297,21 @@ class PyZestClient:
 
     def returnPayload(self, x):
         return x["payload"]
-    def returnInput(selfself, x):
+    def returnInput(self, x):
         return x
+    def closeSockets(self):
+        self.socket.close()
+    def stopObserving(self):
+        pass
 
 def main():
     p=PyZestClient('vl6wu0A@XP?}Or/&BR#LSxn>A+}L)p44/W[wXL3<',"tcp://127.0.0.1:5555")
-    #p.get(tokenString="",path='/kv/foo',contentFormat="JSON")
-    #p.post(tokenString="",path='/kv/test',payLoad='{"name":"testuser", "age":35}', contentFormat="JSON")
+    p.get(tokenString="",path='/kv/test',contentFormat="JSON")
+    p.post(tokenString="",path='/kv/test',payLoad='{"name":"testuser", "age":35}', contentFormat="JSON")
     #p.get(tokenString="",path='/kv/test',contentFormat="JSON")
-    p.observe(tokenString="",path='/kv/test',contentFormat="JSON", timeOut=30)
+    p.observe(tokenString="",path='/kv/test',contentFormat="JSON", timeOut=300)
+    p.post(tokenString="", path='/kv/test', payLoad='{"name":"testuser1", "age":35}', contentFormat="JSON")
+    p.closeSockets()
 if __name__=="__main__":
     logging.info("Begin")
     main()
