@@ -16,10 +16,9 @@ import socket as sc
 
 from Exception.PyZestException import PyZestException
 
-dealer_endpoint = 'tcp://127.0.0.1:5556'
 
 class PyZestClient:
-    def __init__(self, server_key, end_point, logger=None):
+    def __init__(self, server_key, end_point, dealer_endpoint, logger=None):
         """
 
         :param server_key:
@@ -39,17 +38,13 @@ class PyZestClient:
             auth.start()
             auth.configure_curve(domain='*', location=zmq.auth.CURVE_ALLOW_ANY)
             self.socket = ctx.socket(zmq.REQ)
-            #self.socket.setsockopt(zmq.SNDTIMEO, 5000)
             client_public, client_secret = zmq.curve_keypair()
             self.socket.curve_secretkey = client_secret
             self.socket.curve_publickey = client_public
 
             self.socket.curve_serverkey = bytes(server_key, 'utf8')
-           # self.socket.setsockopt_string("curve_serverKey", server_key)
             self.socket.connect(end_point)
             self.logger.info('Connection established with ' + end_point)
-            #self.socket.disconnect(end_point)
-            #self.logger.info('Connection disconnected with ' + end_point)
 
         except zmq.ZMQError as e:
             self.logger.error("Cannot establish connection" + str(e.args))
