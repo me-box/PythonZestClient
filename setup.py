@@ -11,13 +11,13 @@ from distutils.core import setup
 
 setup(
   name = 'pythonzestclient',
-  packages = ['pythonzestclient'], # this must be the same as the name above
-  version = '0.1.1',
+  packages = ['pythonzestclient','pythonzestclient.exception'],
+  version = '0.1.2dev',
   description = 'Python Client to connect to zest server',
   author = 'Poonam Yadav',
   author_email = 'poonam.hiwal@gmail.com',
-  url = 'https://github.com/pooyadav/pythonzestclient', # use the URL to the github repo
-  download_url = 'https://github.com/pooyadav/pythonzestclient/archive/0.1.1.tar.gz', # I'll explain this in a second
-  keywords = ['zest client', 'databox project', 'datastore'], # arbitrary keywords
+  url = 'https://github.com/pooyadav/pythonzestclient',
+  download_url = 'https://github.com/pooyadav/pythonzestclient/archive/0.1.2. tar.gz', # I'll explain this in a second
+  keywords = ['zest client', 'databox project', 'datastore'],
   classifiers = [],
 )

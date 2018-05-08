@@ -10,11 +10,11 @@ import zmq
 import zmq.auth
 from zmq.auth.thread import ThreadAuthenticator
 
-import  pyZestUtil
+from pythonzestclient import pyZestUtil
 import socket as sc
 
 
-from Exception.PyZestException import PyZestException
+from pythonzestclient.exception.pyZestException import PyZestException
 
 
 class PyZestClient:
