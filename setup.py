@@ -12,7 +12,7 @@ from distutils.core import setup
 setup(
   name = 'pythonzestclient',
   packages = ['pythonzestclient','pythonzestclient.exception'],
-  version = '0.1.4',
+  version = '0.1.5',
   description = 'Python Client to connect to zest server',
   author = 'Poonam Yadav',
   author_email = 'poonam.hiwal@gmail.com',
