@@ -17,7 +17,7 @@ setup(
   author = 'Poonam Yadav',
   author_email = 'poonam.hiwal@gmail.com',
   url = 'https://github.com/pooyadav/pythonzestclient',
-  download_url = 'https://github.com/pooyadav/pythonzestclient/archive/0.1.4.tar.gz', # I'll explain this in a second
+  download_url = 'https://github.com/pooyadav/pythonzestclient/archive/0.1.5.tar.gz', # I'll explain this in a second
   keywords = ['zest client', 'databox project', 'datastore'],
   classifiers = [],
 )

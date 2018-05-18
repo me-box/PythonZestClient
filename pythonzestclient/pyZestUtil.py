@@ -41,35 +41,23 @@ def parse(msg):
     #assert type(msg) is bytearray, "Cannot parse header- invalid format, should be byte array"
     #assert len(msg) < 4, "Cannot parse header - not enough bytes"
     zr = zestHeader()
-    print("Inside Response Parsing - received code: ")
     zr["code"] = msg[0]
     zr["oc"] = msg[1]
     zr["tkl"] = int.from_bytes(bytes(msg[2:4]),byteorder='big')
-
-    print(zr["code"])
-    print(zr["oc"])
-    print(zr["tkl"])
 
     #Test again this block
     if zr["tkl"] > 0:
         zr["token"] = str(bytes(msg[4:4+zr["tkl"]],byteorder='big'), encoding="utf-8")
 
     offset = 4 + zr["tkl"]
-    print(offset)
 
     for i in range(0, zr["oc"]):
-        print("offset")
-        print(offset)
         zoh = parseZestOptionsHeader(msg, offset)
-        print(zoh)
-        print(len(zoh))
         zr["options"].append(zoh)
         offset = offset + 4 + zoh["len"]
 
     if(len(msg) > offset):
-        print("Inside Response Parsing - msg has a payload")
         zr["payload"] = str(msg[offset:], 'utf-8')
-        print("  ", zr["payload"])
     return zr
 
 
@@ -84,22 +72,17 @@ def zestHeader():
 
 
 def marshalZestHeader(header):
-    print(header)
     optionsLen = [li['len']+4 for li in header["options"]]
     optionsLen = sum(optionsLen)-4
-    print("Inside Marshalheader - Options Length: ")
-    print(optionsLen)
     payloadLen = len(bytearray(header["payload"], "utf8"))
     bufferSize = 8+header["tkl"]+ optionsLen + payloadLen
-    print("Inside Marshalheader - BufferSize : ")
-    print(bufferSize)
     buff = bytearray(bufferSize)
     x = memoryview(buff)
     buff[0] = header["code"]
     buff[1] = header["oc"]
-    buff[2:4] = header["tkl"].to_bytes(2, byteorder='big', signed=True) #Fix this for integer
-    #buff[4] = header['token']
+    buff[2:4] = header["tkl"].to_bytes(2, byteorder='big', signed=True)
     offset = 4 + header["tkl"]
+    buff[4:offset] = bytearray(header['token'], "utf8")
     for i in range(0, header["oc"]):
         zoh = MarshalZestOptionsHeader(header["options"][i])
         buff[offset:offset+len(zoh)]= zoh
