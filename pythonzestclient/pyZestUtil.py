@@ -82,7 +82,7 @@ def marshalZestHeader(header):
     buff[1] = header["oc"]
     buff[2:4] = header["tkl"].to_bytes(2, byteorder='big', signed=True)
     offset = 4 + header["tkl"]
-    buff[4:offset] = bytearray(header['token'], "utf8")
+    buff[4:offset] = bytearray(header['token'])
     for i in range(0, header["oc"]):
         zoh = MarshalZestOptionsHeader(header["options"][i])
         buff[offset:offset+len(zoh)]= zoh
