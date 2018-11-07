@@ -82,11 +82,10 @@ class PyZestClient:
         try:
             response = self.send_request_and_await_response(header_into_bytes)
             try:
-                parsed_response = self.handle_response(response, self.returnInput)
+                parsed_response = self.handle_response(response, self.returnPayload)
             except Exception as e:
                 self.logger.error("Inside Post: Error in handling response - " + str(e.args))
-
-                return parsed_response["payload"]
+            return parsed_response["payload"]
         except Exception as e:
             self.logger.error( "Inside Post: Message sending error - " + str(e.args))
 
@@ -203,7 +202,7 @@ class PyZestClient:
         except Exception as e:
             self.logger.error("Inside Resolve: Error setting dealer Server key - " + str(e.args))
         try:
-            dealer.connect(dealer_endpoint)
+            dealer.connect(self.dealer_endpoint)
         except Exception as e:
             self.logger.error("Inside Resolve: Error connecting dealer - " + str(e.args))
 
@@ -245,8 +244,8 @@ class PyZestClient:
             if zr["code"] == 65:
                 return zr
             elif zr["code"] == 69:
-                x = fun(zr)
-                return 0
+                pl = fun(zr)
+                return zr["payload"]
             elif zr["code"]== 128:
                 # Code 128 corresponds to bad request
                 raise PyZestException(zr, "Bad Request")
@@ -262,9 +261,12 @@ class PyZestClient:
 
     def returnPayload(self, x):
         return x["payload"]
+
     def returnInput(self, x):
         return x
+
     def closeSockets(self):
         self.socket.close()
+
     def stopObserving(self):
         pass

@@ -10,16 +10,25 @@ class WriteReadTestCase(unittest.TestCase):
     def setUp(self):
         self.zc = pythonzestclient.PyZestClient(CORE_STORE_KEY,zestEndpoint,zestDealerEndpoint)
 
-    def tearDown(self):
-        print("Tearing Down")
+    def testKVRead(self):
+        print("testKVRead")
+        expected='{"name":"testuser1","age":38}'
+        path='/kv/test/key1'
+        contentFormat='JSON'
+
+        response = self.zc.post(path, expected, contentFormat,tokenString)
+        self.assertEqual(response,"")
+
+        response = self.zc.get(path, contentFormat,tokenString)
+        self.assertEqual(response,expected)
 
     def testKVWrite(self):
         print("testKVWrite")
-        payLoad='{"name":"testuser", "age":37}'
+        payLoad='{"name":"testuser2","age":38}'
         path='/kv/test/key1'
         contentFormat='JSON'
         response = self.zc.post(path, payLoad, contentFormat,tokenString)
-        self.assertEqual(response,None)
+        self.assertEqual(response,"")
 
     def testKVRead(self):
         print("testKVRead")
