@@ -14,7 +14,7 @@ from pythonzestclient import pyZestUtil
 import socket as sc
 
 
-from pythonzestclient.exception.pyZestException import PyZestException
+from pythonzestclient.Exception import PyZestException
 
 
 class PyZestClient:
@@ -27,7 +27,7 @@ class PyZestClient:
         """
 
         self.logger = logger or logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.NOTSET)
         self.serverKey = server_key
         self.endpoint = end_point
         self.logger.debug("Connecting to the server")
@@ -47,7 +47,7 @@ class PyZestClient:
             self.logger.info('Connection established with ' + end_point)
 
         except zmq.ZMQError as e:
-            self.logger.error("Cannot establish connection" + str(e.args))
+            self.logger.error("Cannot establish connection" + str(e))
 
 
     def post(self,path, payLoad, contentFormat,tokenString=None):
@@ -268,6 +268,3 @@ class PyZestClient:
         self.socket.close()
     def stopObserving(self):
         pass
-
-
-
