@@ -25,8 +25,8 @@ def check_content_format(format):
     else:
         raise Exception("KKK")
 
-
-content_format_to_int = lambda format: format_map.get(format, 0)
+#vs451: added format.upper() to correctly map format string to the respective integer value
+content_format_to_int = lambda format: format_map.get(format.upper(), 0)
 
 
 def parse(msg):
@@ -106,7 +106,6 @@ def MarshalZestOptionsHeader(zoh):
     return buff1
 
 def parseZestOptionsHeader(msg, offset):
-    print("Inside Parse Option Header")
     zoh = newZestOptionHeader(0,0,0)
     zoh["number"] = int.from_bytes(bytes(msg[offset:offset+2]),byteorder='big',signed=True)
     zoh["len"] = int.from_bytes(bytes(msg[offset+2:offset+4]),byteorder='big',signed=True)
