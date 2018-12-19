@@ -1,6 +1,8 @@
 ### PythonZestClient
 
-This python client connects with the zest datastore.
+This uses python version 3.5
+
+This python client connects with the zest datastore. 
 
 ### Testing the client:
 #### Prerequisites for testing:
@@ -11,7 +13,7 @@ In terminal (inside PythonZestClient folder):
 
 #### Automatic tests:
 
-* In terminal run __./zestClientTest.py__ (these auto tests will check that create/delete/post requests work properly)
+* In terminal run python3 zestClientTest.py__ (these auto tests will check that create/delete/post requests work properly)
 
 #### Manual testing:
 
