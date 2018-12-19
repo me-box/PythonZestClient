@@ -11,7 +11,7 @@ In terminal (inside PythonZestClient folder):
 
 #### Automatic tests:
 
-* In terminal run __./setupTest.sh__ (these auto tests will check that create/delete/post requests work properly)
+* In terminal run __./zestClientTest.py__ (these auto tests will check that create/delete/post requests work properly)
 
 #### Manual testing:
 
