@@ -4,5 +4,5 @@ setup.py
 pythonzestclient/__init__.py
 pythonzestclient/pyZestClient.py
 pythonzestclient/pyZestUtil.py
+pythonzestclient/exception/PyZestException.py
 pythonzestclient/exception/__init__.py
-pythonzestclient/exception/pyZestException.py
